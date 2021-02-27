@@ -4,6 +4,7 @@
 #include <string>
 
 constexpr int tileSize = 16;
+constexpr int roomSize = 64;
 
 struct Pixel
 {
@@ -17,6 +18,7 @@ constexpr Pixel backgroundColor{0, 0, 0, 0};
 
 struct Image
 {
+  Image();
   explicit Image(const std::string &a_path);
   Image(int a_width, int a_height, int a_channels);
 
@@ -30,10 +32,12 @@ struct Image
 
   Pixel GetPixel(int x, int y) { return data[width * y + x];}
   void  PutPixel(int x, int y, const Pixel &pix) { data[width* y + x] = pix; }
+  void  PutBackGround(int x, int y) { data[width* y + x] = background_data[width * y + x]; }
 
   ~Image();
 
 private:
+  Pixel * background_data = nullptr;
   int width = -1;
   int height = -1;
   int channels = 3;
@@ -42,6 +46,14 @@ private:
   bool self_allocated = false;
 };
 
+
+struct Room {
+    explicit Room(const std::string &a_path);
+    Pixel * get_room() { return data; };
+    ~Room();
+private:
+    Pixel *data = nullptr;
+};
 
 
 #endif //MAIN_IMAGE_H

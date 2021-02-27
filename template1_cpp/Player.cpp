@@ -9,26 +9,34 @@ bool Player::Moved() const
     return true;
 }
 
-void Player::ProcessInput(MovementDir dir)
+void Player::ProcessInput(MovementDir dir, Image &screen)
 {
   int move_dist = move_speed * 1;
   switch(dir)
   {
     case MovementDir::UP:
-      old_coords.y = coords.y;
-      coords.y += move_dist;
+      if (coords.y + move_dist + tileSize < screen.Height()) {
+        old_coords.y = coords.y;
+        coords.y += move_dist;
+      }
       break;
     case MovementDir::DOWN:
-      old_coords.y = coords.y;
-      coords.y -= move_dist;
+      if (coords.y - move_dist >= 0) {
+        old_coords.y = coords.y;
+        coords.y -= move_dist;
+      }
       break;
     case MovementDir::LEFT:
-      old_coords.x = coords.x;
-      coords.x -= move_dist;
+      if (coords.x - move_dist >= 0) {
+        old_coords.x = coords.x;
+        coords.x -= move_dist;
+      }
       break;
     case MovementDir::RIGHT:
-      old_coords.x = coords.x;
-      coords.x += move_dist;
+      if (coords.x + move_dist + tileSize < screen.Width()) {
+        old_coords.x = coords.x;
+        coords.x += move_dist;
+      }
       break;
     default:
       break;
@@ -43,7 +51,7 @@ void Player::Draw(Image &screen)
     {
       for(int x = old_coords.x; x <= old_coords.x + tileSize; ++x)
       {
-        screen.PutPixel(x, y, backgroundColor);
+        screen.PutBackGround(x, y);
       }
     }
     old_coords = coords;

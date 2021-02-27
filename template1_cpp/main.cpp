@@ -43,16 +43,16 @@ void OnKeyboardPressed(GLFWwindow* window, int key, int scancode, int action, in
 	}
 }
 
-void processPlayerMovement(Player &player)
+void processPlayerMovement(Player &player, Image &screen)
 {
   if (Input.keys[GLFW_KEY_W])
-    player.ProcessInput(MovementDir::UP);
+    player.ProcessInput(MovementDir::UP, screen);
   else if (Input.keys[GLFW_KEY_S])
-    player.ProcessInput(MovementDir::DOWN);
+    player.ProcessInput(MovementDir::DOWN, screen);
   if (Input.keys[GLFW_KEY_A])
-    player.ProcessInput(MovementDir::LEFT);
+    player.ProcessInput(MovementDir::LEFT, screen);
   else if (Input.keys[GLFW_KEY_D])
-    player.ProcessInput(MovementDir::RIGHT);
+    player.ProcessInput(MovementDir::RIGHT, screen);
 }
 
 void OnMouseButtonClicked(GLFWwindow* window, int button, int action, int mods)
@@ -124,7 +124,13 @@ int main(int argc, char** argv)
 //	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-  GLFWwindow*  window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "task1 base project", nullptr, nullptr);
+  Image screenBuffer;
+  std::cout << (screenBuffer.Data() == nullptr) << std::endl;
+  std::cout << screenBuffer.Width() << " " << screenBuffer.Height() << std::endl;
+
+  std::cout << screenBuffer.Data()[100].r << std::endl;
+
+  GLFWwindow*  window = glfwCreateWindow(screenBuffer.Width(), screenBuffer.Height(), "task1 base project", nullptr, nullptr);
 	if (window == nullptr)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -147,15 +153,13 @@ int main(int argc, char** argv)
 	while (gl_error != GL_NO_ERROR)
 		gl_error = glGetError();
 
-	Point starting_pos{.x = WINDOW_WIDTH / 2, .y = WINDOW_HEIGHT / 2};
+  Point starting_pos{.x = screenBuffer.Width() / 2, .y = screenBuffer.Height() / 2};
 	Player player{starting_pos};
 
-	Image img("../resources/tex.png");
-	Image screenBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, 4);
-
-  glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);  GL_CHECK_ERRORS;
+  glViewport(0, 0, screenBuffer.Width(), screenBuffer.Height());  GL_CHECK_ERRORS;
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GL_CHECK_ERRORS;
 
+  std::cout << screenBuffer.Width() << " " << screenBuffer.Height() << std::endl;
   //game loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -164,11 +168,11 @@ int main(int argc, char** argv)
 		lastFrame = currentFrame;
     glfwPollEvents();
 
-    processPlayerMovement(player);
+    processPlayerMovement(player, screenBuffer);
     player.Draw(screenBuffer);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); GL_CHECK_ERRORS;
-    glDrawPixels (WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data()); GL_CHECK_ERRORS;
+    glDrawPixels (screenBuffer.Width(), screenBuffer.Height(), GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data()); GL_CHECK_ERRORS;
 
 		glfwSwapBuffers(window);
 	}
