@@ -9,13 +9,16 @@
 #include <fstream>
 
 Image::Image() {
-  Room room("../Rooms/room1.txt");
-  data = room.get_room();
+  room = new struct Room("../Rooms/room1.txt");
 
-  Room background_room("../Rooms/room1.txt");
-  background_data = background_room.get_room();
-  width = roomSize * tileSize;
-  height = roomSize * tileSize;
+  data = new Pixel[block_size * block_size * roomSize * roomSize];
+  Pixel * room_data = room->get_room();
+  for (int i = 0; i < block_size * block_size * roomSize * roomSize; ++i) {
+    data[i] = room_data[i];
+  }
+
+  width = roomSize * block_size;
+  height = roomSize * block_size;
   channels = sizeof(Pixel);
   size = width * height * channels;
 }
@@ -24,7 +27,6 @@ Image::Image(const std::string &a_path)
 {
   if((data = (Pixel*)stbi_load(a_path.c_str(), &width, &height, &channels, sizeof(Pixel))) != nullptr)
   {
-    background_data = (Pixel*)stbi_load(a_path.c_str(), &width, &height, &channels, sizeof(Pixel));
     size = width * height * channels;
   }
 }
@@ -32,7 +34,6 @@ Image::Image(const std::string &a_path)
 Image::Image(int a_width, int a_height, int a_channels)
 {
   data = new Pixel[a_width * a_height ]{};
-  background_data = new Pixel[a_width * a_height ]{};
 
   if(data != nullptr)
   {
@@ -81,7 +82,7 @@ Room::Room(const std::string &a_path)
 {
   char tile;
   std::ifstream infile(a_path);
-  data = new Pixel[roomSize * tileSize * roomSize * tileSize]{};
+  data = new Pixel[roomSize * block_size * roomSize * block_size]{};
   for (int i = 0; i < roomSize; ++i) {
     for (int j = 0; j < roomSize; ++j) {
       infile >> tile;
@@ -90,21 +91,26 @@ Room::Room(const std::string &a_path)
       int tmp_height;
       int tmp_channels;
       Pixel * tmp = nullptr;
+      map[i * roomSize + j] = tile;
 
       switch(tile){
         case '.':
+        case 'Q':
           tmp = (Pixel*)stbi_load("../Tiles/Floor.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
           break;
         case '#':
           tmp = (Pixel*)stbi_load("../Tiles/Wall.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
           break;
+        case '_':
+          tmp = (Pixel*)stbi_load("../Tiles/Empty.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+          break;
         default:
-          tmp = new Pixel[tileSize * tileSize]{};
+          tmp = new Pixel[block_size * block_size]{};
       }
         
-      for (int k = 0; k < tileSize; ++k) {
-        for (int t = 0; t < tileSize; ++t) {
-          data[(i * tileSize + k) * roomSize * tileSize + j * tileSize + t] = tmp[k * tileSize + t];
+      for (int k = 0; k < block_size; ++k) {
+        for (int t = 0; t < block_size; ++t) {
+          data[(i * block_size + k) * roomSize * block_size + j * block_size + t] = tmp[k * block_size + t];
         }
       }
     }
