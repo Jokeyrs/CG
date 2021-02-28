@@ -8,11 +8,25 @@
 #include <iostream>
 #include <fstream>
 
-Image::Image() {
-  room = new struct Room("../Rooms/room1.txt");
+std::string room_files[2] = {"../Rooms/room1.txt", "../Rooms/room2.txt"};
+
+Image::Image(const std::string &a_path) {
+  rooms = new struct Room[mapWidth * mapHeight];
+
+  char room_c;
+  std::ifstream infile(a_path);
+  for (int i = 0; i < mapHeight; ++i) {
+    for (int j = 0; j < mapWidth; ++j) {
+      infile >> room_c;
+      rooms[i * mapHeight + j].init(room_files[room_c - 'A']);
+    }
+  }
+
+  cur_room = &rooms[0];
+  // cur_room = new struct Room("../Rooms/room1.txt");
 
   data = new Pixel[block_size * block_size * roomSize * roomSize];
-  Pixel * room_data = room->get_room();
+  Pixel * room_data = cur_room->get_room();
   for (int i = 0; i < block_size * block_size * roomSize * roomSize; ++i) {
     data[i] = room_data[i];
   }
@@ -21,14 +35,6 @@ Image::Image() {
   height = roomSize * block_size;
   channels = sizeof(Pixel);
   size = width * height * channels;
-}
-
-Image::Image(const std::string &a_path)
-{
-  if((data = (Pixel*)stbi_load(a_path.c_str(), &width, &height, &channels, sizeof(Pixel))) != nullptr)
-  {
-    size = width * height * channels;
-  }
 }
 
 Image::Image(int a_width, int a_height, int a_channels)
@@ -67,8 +73,7 @@ int Image::Save(const std::string &a_path)
   return 0;
 }
 
-Image::~Image()
-{
+Image::~Image() {
   if(self_allocated)
     delete [] data;
   else
@@ -77,9 +82,11 @@ Image::~Image()
   }
 }
 
+Room::Room(const std::string &a_path) {
+  Room::init(a_path);
+}
 
-Room::Room(const std::string &a_path)
-{
+void Room::init(const std::string &a_path) {
   char tile;
   std::ifstream infile(a_path);
   data = new Pixel[roomSize * block_size * roomSize * block_size]{};
@@ -118,6 +125,6 @@ Room::Room(const std::string &a_path)
 }
 
 
-Room::~Room()
-{
+Room::~Room() {
+  delete [] data;
 }

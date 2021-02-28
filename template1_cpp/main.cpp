@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 	// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	// glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-  Image screenBuffer;
+  Image screenBuffer("../Rooms/rooms_map.txt");
   std::cout << (screenBuffer.Data() == nullptr) << std::endl;
   std::cout << screenBuffer.Width() << " " << screenBuffer.Height() << std::endl;
 

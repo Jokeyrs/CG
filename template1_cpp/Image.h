@@ -7,6 +7,9 @@ constexpr int block_size = 32;
 constexpr int tileSize = 16;
 constexpr int roomSize = 32;
 
+constexpr int mapWidth = 2;
+constexpr int mapHeight = 1;
+
 struct Pixel
 {
   uint8_t r;
@@ -19,9 +22,11 @@ constexpr Pixel backgroundColor{0, 0, 0, 0};
 
 struct Room {
     explicit Room(const std::string &a_path);
+    Room() {};
     Pixel * get_room() { return data; };
     char * Map() { return map; }
     ~Room();
+    void init(const std::string &a_path);
 private:
     Pixel *data = nullptr;
     char * map = new char[roomSize * roomSize];
@@ -29,7 +34,6 @@ private:
 
 struct Image
 {
-  Image();
   explicit Image(const std::string &a_path);
   Image(int a_width, int a_height, int a_channels);
 
@@ -40,11 +44,11 @@ struct Image
   int Channels() const { return channels; }
   size_t Size()  const { return size; }
   Pixel* Data()        { return  data; }
-  Room * Room()        { return room; }
+  Room * Room()        { return cur_room; }
 
   Pixel GetPixel(int x, int y) { return data[width * y + x];}
   void  PutPixel(int x, int y, const Pixel &pix) { data[width* y + x] = pix; }
-  void  PutBackGround(int x, int y) { data[width* y + x] = room->get_room()[width * y + x]; }
+  void  PutBackGround(int x, int y) { data[width* y + x] = cur_room->get_room()[width * y + x]; }
 
   ~Image();
 
@@ -55,8 +59,9 @@ private:
   size_t size = 0;
   Pixel *data = nullptr;
   bool self_allocated = false;
-  struct Room * room = nullptr;
-  char * rooms_map = new char[20];
+  struct Room * cur_room = nullptr;
+  char * rooms_map = new char[2];
+  struct Room * rooms = nullptr;
 };
 
 
