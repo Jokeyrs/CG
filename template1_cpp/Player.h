@@ -36,8 +36,8 @@ private:
   Point coords {.x = 10, .y = 10};
   Point old_coords {.x = 10, .y = 10};
   Pixel color {.r = 255, .g = 255, .b = 100, .a = 255};
-  int move_speed = 4;
-
+  int move_speed = 1;
+  bool changed_room = false;
 };
 
 #endif //MAIN_PLAYER_H

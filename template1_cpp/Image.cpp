@@ -18,12 +18,11 @@ Image::Image(const std::string &a_path) {
   for (int i = 0; i < mapHeight; ++i) {
     for (int j = 0; j < mapWidth; ++j) {
       infile >> room_c;
-      rooms[i * mapHeight + j].init(room_files[room_c - 'A']);
+      rooms[i * mapWidth + j].init(room_files[room_c - 'A']);
     }
   }
 
-  cur_room = &rooms[0];
-  // cur_room = new struct Room("../Rooms/room1.txt");
+  cur_room = &rooms[y_room * mapWidth + x_room];
 
   data = new Pixel[block_size * block_size * roomSize * roomSize];
   Pixel * room_data = cur_room->get_room();
@@ -39,7 +38,7 @@ Image::Image(const std::string &a_path) {
 
 Image::Image(int a_width, int a_height, int a_channels)
 {
-  data = new Pixel[a_width * a_height ]{};
+  data = new Pixel[a_width * a_height]{};
 
   if(data != nullptr)
   {
@@ -73,6 +72,34 @@ int Image::Save(const std::string &a_path)
   return 0;
 }
 
+void Image::change_room(int dir) {
+  switch(dir) {
+    case 0:
+      x_room -= 1;
+      break;
+    case 1:
+      y_room -= 1;
+      break;
+    case 2:
+      x_room += 1;
+      break;
+    case 3:
+      y_room += 1;
+      break;
+    default:
+      break;
+  }
+
+  std::cout << x_room << " " << y_room << std::endl;
+
+  cur_room = &rooms[y_room * mapWidth + x_room];
+  Pixel * room_data = cur_room->get_room();
+
+  for (int i = 0; i < block_size * block_size * roomSize * roomSize; ++i) {
+    data[i] = room_data[i];
+  }
+} 
+
 Image::~Image() {
   if(self_allocated)
     delete [] data;
@@ -89,7 +116,7 @@ Room::Room(const std::string &a_path) {
 void Room::init(const std::string &a_path) {
   char tile;
   std::ifstream infile(a_path);
-  data = new Pixel[roomSize * block_size * roomSize * block_size]{};
+  data = new Pixel[block_size * block_size * roomSize * roomSize]{};
   for (int i = 0; i < roomSize; ++i) {
     for (int j = 0; j < roomSize; ++j) {
       infile >> tile;
@@ -102,6 +129,7 @@ void Room::init(const std::string &a_path) {
 
       switch(tile){
         case '.':
+        case 'x':
         case 'Q':
           tmp = (Pixel*)stbi_load("../Tiles/Floor.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
           break;

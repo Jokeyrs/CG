@@ -1,5 +1,6 @@
 #include "Player.h"
 
+#include <iostream>
 
 bool Player::Moved() const
 {
@@ -39,14 +40,40 @@ bool check_empty(Point &coords, char *map) {
   return ans;
 }
 
-STATE Player::ProcessInput(MovementDir dir, Image &screen)
-{
+STATE Player::ProcessInput(MovementDir dir, Image &screen) {
   char * room_map = screen.Room()->Map();
   int move_dist = move_speed * 1;
 
+  /*preprocess room change*/
+  bool is_change = false;
+
+  if (coords.x + tileSize == block_size * roomSize - 1) { 
+    coords.x = tileSize / 2;
+    screen.change_room(2);
+    is_change = true;
+  } else if (coords.x == 0) { 
+    coords.x = block_size * roomSize - tileSize - tileSize / 2;
+    screen.change_room(0);
+    is_change = true;
+  } else if (coords.y + tileSize == block_size * roomSize - 1) {
+    coords.y = tileSize / 2;
+    screen.change_room(1);
+    is_change = true;
+  } else if (coords.y == 0) { 
+    coords.y = block_size * roomSize - tileSize - tileSize / 2;
+    screen.change_room(3);
+    is_change = true;
+  }
+
+  if (is_change) {
+    old_coords.x = coords.x;
+    old_coords.y = coords.y;
+    return STATE::PLAYING;
+  }
+
+
   while (move_dist > 0) {
     Point new_coords{coords.x, coords.y};
-    move_dist -= 1;
 
     switch(dir)
     {
@@ -76,6 +103,8 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen)
       }
       break;
     }
+
+    move_dist -= 1;
   }
 
   if (check_quit(coords, room_map)) {
@@ -93,9 +122,9 @@ void Player::Draw(Image &screen)
 {
   if(Moved())
   {
-    for(int y = old_coords.y; y <= old_coords.y + tileSize; ++y)
+    for(int y = old_coords.y; y < old_coords.y + tileSize; ++y)
     {
-      for(int x = old_coords.x; x <= old_coords.x + tileSize; ++x)
+      for(int x = old_coords.x; x < old_coords.x + tileSize; ++x)
       {
         screen.PutBackGround(x, y);
       }
@@ -103,9 +132,9 @@ void Player::Draw(Image &screen)
     old_coords = coords;
   }
 
-  for(int y = coords.y; y <= coords.y + tileSize; ++y)
+  for(int y = coords.y; y < coords.y + tileSize; ++y)
   {
-    for(int x = coords.x; x <= coords.x + tileSize; ++x)
+    for(int x = coords.x; x < coords.x + tileSize; ++x)
     {
       screen.PutPixel(x, y, color);
     }

@@ -6,7 +6,7 @@
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
-constexpr GLsizei WINDOW_WIDTH = 1024, WINDOW_HEIGHT = 1024;
+constexpr GLsizei WINDOW_WIDTH = block_size * roomSize, WINDOW_HEIGHT = block_size * roomSize;
 
 struct InputState
 {
@@ -123,15 +123,15 @@ int main(int argc, char** argv)
     return -1;
 
 	// glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	// glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	// glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
   Image screenBuffer("../Rooms/rooms_map.txt");
   std::cout << (screenBuffer.Data() == nullptr) << std::endl;
-  std::cout << screenBuffer.Width() << " " << screenBuffer.Height() << std::endl;
+  std::cout << WINDOW_WIDTH << " " << WINDOW_HEIGHT << std::endl;
 
-  GLFWwindow*  window = glfwCreateWindow(screenBuffer.Width() / 2, screenBuffer.Height() / 2, "task1 base project", nullptr, nullptr);
+  GLFWwindow*  window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "task1 base project", nullptr, nullptr);
 	if (window == nullptr)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -154,13 +154,13 @@ int main(int argc, char** argv)
 	while (gl_error != GL_NO_ERROR)
 		gl_error = glGetError();
 
-  Point starting_pos{.x = screenBuffer.Width() / 2 - tileSize / 2, .y = screenBuffer.Height() / 2 - tileSize / 2};
+  Point starting_pos{.x = WINDOW_WIDTH / 2 - tileSize / 2, .y = WINDOW_HEIGHT / 2 - tileSize / 2};
 	Player player{starting_pos};
 
-  glViewport(0, 0, screenBuffer.Width(), screenBuffer.Height());  GL_CHECK_ERRORS;
+  glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);  GL_CHECK_ERRORS;
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GL_CHECK_ERRORS;
 
-  std::cout << screenBuffer.Width() << " " << screenBuffer.Height() << std::endl;
+  std::cout << WINDOW_WIDTH << " " << WINDOW_HEIGHT << std::endl;
   //game loop
 
   STATE game_state(STATE::PLAYING);
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
     player.Draw(screenBuffer);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); GL_CHECK_ERRORS;
-    glDrawPixels (screenBuffer.Width(), screenBuffer.Height(), GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data()); GL_CHECK_ERRORS;
+    glDrawPixels (WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data()); GL_CHECK_ERRORS;
 
 		glfwSwapBuffers(window);
 
