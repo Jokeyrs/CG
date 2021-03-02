@@ -117,6 +117,14 @@ int initGL()
 	return 0;
 }
 
+void render(Image &screen, GLFWwindow*  window) {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); GL_CHECK_ERRORS;
+  glDrawPixels (WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screen.Data()); GL_CHECK_ERRORS;
+
+	glfwSwapBuffers(window);
+  return;
+}
+
 int main(int argc, char** argv)
 {
 	if(!glfwInit())
@@ -164,30 +172,36 @@ int main(int argc, char** argv)
   //game loop
 
   STATE game_state(STATE::PLAYING);
+  bool run_loop = true;
 
-	while (!glfwWindowShouldClose(window))
-	{
-		GLfloat currentFrame = glfwGetTime();
+	while (!glfwWindowShouldClose(window) && run_loop) {
+    GLfloat currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-    glfwPollEvents();
 
-    game_state = processPlayerMovement(player, screenBuffer);
-    player.Draw(screenBuffer);
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); GL_CHECK_ERRORS;
-    glDrawPixels (WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data()); GL_CHECK_ERRORS;
-
-		glfwSwapBuffers(window);
-
-    if (game_state == STATE::WIN) {
-      std::cout << "YOU WIN" << std::endl;
-      sleep(1);
-      break;
-    } else if (game_state == STATE::LOSE) {
-      std::cout << "DIED! YOU LOSE" << std::endl;
-      sleep(1);
-      break;
+    switch(game_state) {
+      case STATE::WIN:
+        screenBuffer.winData();
+        std::cout << "YOU WIN" << std::endl;
+        render(screenBuffer, window);
+        sleep(2);
+        run_loop = false;
+        break;
+      case STATE::LOSE:
+        screenBuffer.loseData();
+        std::cout << "DIED! YOU LOSE" << std::endl;
+        render(screenBuffer, window);
+        sleep(2);
+        run_loop = false;
+        break;
+      case STATE::PLAYING:
+        glfwPollEvents();
+        game_state = processPlayerMovement(player, screenBuffer);
+        player.Draw(screenBuffer);
+        render(screenBuffer, window);
+        break;
+      default:
+        break;
     }
 	}
 

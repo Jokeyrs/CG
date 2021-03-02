@@ -7,8 +7,8 @@ constexpr int block_size = 32;
 constexpr int tileSize = 16;
 constexpr int roomSize = 32;
 
-constexpr int mapWidth = 5;
-constexpr int mapHeight = 5;
+constexpr int mapWidth = 10;
+constexpr int mapHeight = 2;
 
 struct Pixel
 {
@@ -46,6 +46,9 @@ struct Image
   Pixel* Data()        { return  data; }
   struct Room * Room()        { return cur_room; }
   void change_room(int dir);
+  void winData();
+  void loseData();
+  Pixel * floorData();
 
 
   Pixel GetPixel(int x, int y) { return data[width * y + x];}

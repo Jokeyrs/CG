@@ -16,7 +16,7 @@ bool check_walls(Point &coords, char * map) {
     for (int j = 0; j < 2; ++j) {
       int y = coords.y + i * tileSize;
       int x = coords.x + j * tileSize;
-      ans |= (map[y / block_size * roomSize + x / block_size] == '#');
+      ans |= (map[y / block_size * roomSize + x / block_size] == '#') | (map[y / block_size * roomSize + x / block_size] == 'x');
     } 
   }
   return ans;
@@ -26,6 +26,69 @@ bool check_quit(Point &coords, char *map) {
   int y = coords.y;
   int x = coords.x;
   return (map[y / block_size * roomSize + x / block_size] == 'Q');
+}
+
+bool check_key(Point &coords, Image& screen) {
+  char * map = screen.Room()->Map();
+  Pixel * room_data = screen.Room()->get_room();
+  Pixel * data = screen.Data();
+  int tmp_width;
+  int tmp_height;
+  int tmp_channels;
+
+  for (int x = 0; x < 2; ++x) { 
+    for (int y = 0; y < 2; ++y) {
+      int i = (coords.y + tileSize / 4 + x * tileSize / 2) / block_size;
+      int j = (coords.x + tileSize / 4 + y * tileSize / 2) / block_size;
+      if (map[i * roomSize + j] == 'K') {
+        map[i * roomSize + j] = '.';
+        Pixel * tmp = screen.floorData();
+        for (int k = 0; k < block_size; ++k) {
+          for (int t = 0; t < block_size; ++t) {
+            int y_coord = (i * block_size + k) * block_size;
+            int x_coord = j * block_size + t;
+
+            if (!((x_coord < coords.x + tileSize) && (x_coord >= coords.x) && (y_coord < coords.y + tileSize) && y_coord >= coords.y)) {
+              data[y_coord * block_size + x_coord] = tmp[k * block_size + t];
+            }
+            room_data[y_coord * block_size + x_coord] = tmp[k * block_size + t];
+          }
+        }
+        return true;
+      }
+    } 
+  }
+  return false;
+}
+
+void break_wall(Point &coords, Image& screen) {
+  char * map = screen.Room()->Map();
+  Pixel * room_data = screen.Room()->get_room();
+  Pixel * data = screen.Data();
+  int tmp_width;
+  int tmp_height;
+  int tmp_channels;
+
+  for (int x = 0; x < 2; ++x) { 
+    for (int y = 0; y < 2; ++y) {
+      int i = (coords.y - 1 + y * (tileSize + 2)) / block_size;
+      int j = (coords.x - 1 + x * (tileSize + 2)) / block_size;
+      if (map[i * roomSize + j] == 'x') {
+        map[i * roomSize + j] = '.';
+        Pixel * tmp = screen.floorData();
+        for (int k = 0; k < block_size; ++k) {
+          for (int t = 0; t < block_size; ++t) {
+            int y_coord = (i * block_size + k) * block_size;
+            int x_coord = j * block_size + t;
+            data[y_coord * block_size + x_coord] = tmp[k * block_size + t];
+            room_data[y_coord * block_size + x_coord] = tmp[k * block_size + t];
+          }
+        }
+        return;
+      }
+    } 
+  }
+  return;
 }
 
 bool check_empty(Point &coords, char *map) {
@@ -68,6 +131,7 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
   if (is_change) {
     old_coords.x = coords.x;
     old_coords.y = coords.y;
+    key = false;
     return STATE::PLAYING;
   }
 
@@ -114,6 +178,15 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
   if (check_empty(coords, room_map)) {
     return STATE::LOSE;
   }
+
+  if (check_key(coords, screen)) {
+    key = true;
+    std::cout << "Picked a key" << std::endl;
+  }
+
+  if (key) {
+    break_wall(coords, screen);
+  } 
   
   return STATE::PLAYING;
 }

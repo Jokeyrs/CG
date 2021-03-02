@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-std::string room_files[2] = {"../Rooms/room1.txt", "../Rooms/room2.txt"};
+std::string room_files[6] = {"../Rooms/room1.txt", "../Rooms/room2.txt", "../Rooms/room3.txt", "../Rooms/room4.txt", "../Rooms/room5.txt", "../Rooms/room6.txt"};
 
 Image::Image(const std::string &a_path) {
   rooms = new struct Room[mapWidth * mapHeight];
@@ -100,6 +100,31 @@ void Image::change_room(int dir) {
   }
 } 
 
+void Image::winData() {
+  int tmp_width;
+  int tmp_height;
+  int tmp_channels;
+  data = (Pixel*)stbi_load("../Tiles/Win.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+  return;
+}
+
+void Image::loseData() {
+  int tmp_width;
+  int tmp_height;
+  int tmp_channels;
+  data = (Pixel*)stbi_load("../Tiles/Lose.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+  return;
+}
+
+Pixel * Image::floorData() {
+  int tmp_width;
+  int tmp_height;
+  int tmp_channels;
+  Pixel * tmp = (Pixel*)stbi_load("../Tiles/Floor.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+  return tmp;
+}
+
+
 Image::~Image() {
   if(self_allocated)
     delete [] data;
@@ -129,15 +154,22 @@ void Room::init(const std::string &a_path) {
 
       switch(tile){
         case '.':
-        case 'x':
-        case 'Q':
           tmp = (Pixel*)stbi_load("../Tiles/Floor.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+          break;
+        case 'x':
+          tmp = (Pixel*)stbi_load("../Tiles/Door.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+          break;
+        case 'Q':
+          tmp = (Pixel*)stbi_load("../Tiles/Quit.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
           break;
         case '#':
           tmp = (Pixel*)stbi_load("../Tiles/Wall.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
           break;
         case '_':
           tmp = (Pixel*)stbi_load("../Tiles/Empty.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+          break;
+        case 'K':
+          tmp = (Pixel*)stbi_load("../Tiles/MainKey.jpg", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
           break;
         default:
           tmp = new Pixel[block_size * block_size]{};
