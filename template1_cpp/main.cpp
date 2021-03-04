@@ -1,5 +1,5 @@
 #include "common.h"
-#include "Image.h"
+// #include "Image.h"
 #include "Player.h"
 #include "unistd.h"
 
@@ -173,36 +173,53 @@ int main(int argc, char** argv)
 
   STATE game_state(STATE::PLAYING);
   bool run_loop = true;
+  int count = 0;
 
 	while (!glfwWindowShouldClose(window) && run_loop) {
     GLfloat currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-    switch(game_state) {
-      case STATE::WIN:
-        screenBuffer.winData();
-        std::cout << "YOU WIN" << std::endl;
-        render(screenBuffer, window);
-        sleep(2);
-        run_loop = false;
-        break;
-      case STATE::LOSE:
-        screenBuffer.loseData();
-        std::cout << "DIED! YOU LOSE" << std::endl;
-        render(screenBuffer, window);
-        sleep(2);
-        run_loop = false;
-        break;
-      case STATE::PLAYING:
-        glfwPollEvents();
-        game_state = processPlayerMovement(player, screenBuffer);
-        player.Draw(screenBuffer);
-        render(screenBuffer, window);
-        break;
-      default:
-        break;
+    if (count % 2) {
+      render(screenBuffer, window);
+    } else {
+      switch(game_state) {
+        case STATE::WIN:
+          screenBuffer.winData();
+          std::cout << "YOU WIN" << std::endl;
+          render(screenBuffer, window);
+          sleep(2);
+          run_loop = false;
+          break;
+        case STATE::LOSE:
+          screenBuffer.loseData();
+          std::cout << "DIED! YOU LOSE" << std::endl;
+          render(screenBuffer, window);
+          sleep(2);
+          run_loop = false;
+          break;
+        case STATE::PLAYING:
+          glfwPollEvents();
+
+          game_state = processPlayerMovement(player, screenBuffer);
+          if (game_state == STATE::ROOM_CHANGE) {
+            float alpha = 0.02;
+            for (int i = 0; i <= 50; ++i) {
+              screenBuffer.blend(alpha * i);
+              render(screenBuffer, window);
+            }
+            game_state = STATE::PLAYING;
+          }
+
+          
+          player.Draw(screenBuffer);
+          render(screenBuffer, window);
+          break;
+        default:
+          break;
+      }
     }
+    count++;
 	}
 
 	glfwTerminate();

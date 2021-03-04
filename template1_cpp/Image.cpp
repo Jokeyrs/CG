@@ -1,4 +1,5 @@
 #include "Image.h"
+#include "Player.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -9,6 +10,24 @@
 #include <fstream>
 
 std::string room_files[6] = {"../Rooms/room1.txt", "../Rooms/room2.txt", "../Rooms/room3.txt", "../Rooms/room4.txt", "../Rooms/room5.txt", "../Rooms/room6.txt"};
+const char * tile_files[12] = {"../Tiles/Hero_Down_Stay.jpg", "../Tiles/Hero_Down_Left.jpg", "../Tiles/Hero_Down_Right.jpg",
+                              "../Tiles/Hero_Left_Stay.jpg", "../Tiles/Hero_Left_Left.jpg", "../Tiles/Hero_Left_Right.jpg",
+                              "../Tiles/Hero_Up_Stay.jpg", "../Tiles/Hero_Up_Left.jpg", "../Tiles/Hero_Up_Right.jpg",
+                              "../Tiles/Hero_Right_Stay.jpg", "../Tiles/Hero_Right_Left.jpg", "../Tiles/Hero_Right_Right.jpg",};
+
+Player::Player(Point pos) : coords(pos), old_coords(coords) {
+  tiles = new Pixel*[12];
+  int tmp_width;
+  int tmp_height;
+  int tmp_channels;
+
+  for (int i = 0; i < 12; ++i) {
+    tiles[i] =  (Pixel*)stbi_load(tile_files[i], &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+    // tiles[i] = new Pixel[16*16];
+  }
+
+  data = tiles[0];
+}
 
 Image::Image(const std::string &a_path) {
   rooms = new struct Room[mapWidth * mapHeight];
@@ -73,6 +92,7 @@ int Image::Save(const std::string &a_path)
 }
 
 void Image::change_room(int dir) {
+
   switch(dir) {
     case 0:
       x_room -= 1;
@@ -92,13 +112,26 @@ void Image::change_room(int dir) {
 
   std::cout << x_room << " " << y_room << std::endl;
 
+  prev_room = cur_room;
   cur_room = &rooms[y_room * mapWidth + x_room];
   Pixel * room_data = cur_room->get_room();
 
-  for (int i = 0; i < block_size * block_size * roomSize * roomSize; ++i) {
-    data[i] = room_data[i];
-  }
+  // for (int i = 0; i < block_size * block_size * roomSize * roomSize; ++i) {
+  //   data[i] = room_data[i];
+  // }
 } 
+
+void Image::blend(float alpha) {
+  Pixel * cur_room_data = cur_room->get_room();
+  Pixel * prev_room_data = prev_room->get_room();
+
+  for (int i = 0; i < roomSize * roomSize * block_size * block_size; ++i) {
+    data[i].r = cur_room_data[i].r * alpha + prev_room_data[i].r * (1 - alpha);
+    data[i].g = cur_room_data[i].g * alpha + prev_room_data[i].g * (1 - alpha);
+    data[i].b = cur_room_data[i].b * alpha + prev_room_data[i].b * (1 - alpha);
+    data[i].a = cur_room_data[i].a * alpha + prev_room_data[i].a * (1 - alpha);
+  }
+}
 
 void Image::winData() {
   int tmp_width;

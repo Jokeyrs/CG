@@ -1,6 +1,15 @@
 #include "Player.h"
+// #include "Image.cpp"
 
 #include <iostream>
+
+// char * tile_files[4] = {"../Tiles/Hero_Down_Stay.jpg", "../Tiles/Hero_Left_Stay.jpg", "../Tiles/Hero_Up_Stay.jpg", "../Tiles/Hero_Right_Stay.jpg"};
+// std::string left = "../Tiles/Hero_Down_Stay.jpg";
+
+// #define STB_IMAGE_IMPLEMENTATION
+// #include "stb_image.h"
+// #define STB_IMAGE_WRITE_IMPLEMENTATION
+// #include "stb_image_write.h"
 
 bool Player::Moved() const
 {
@@ -14,9 +23,10 @@ bool check_walls(Point &coords, char * map) {
   bool ans = false;
   for (int i = 0; i < 2; ++i) { 
     for (int j = 0; j < 2; ++j) {
-      int y = coords.y + i * tileSize;
-      int x = coords.x + j * tileSize;
+      int y = coords.y + i * tileSize - i;
+      int x = coords.x + j * tileSize - j;
       ans |= (map[y / block_size * roomSize + x / block_size] == '#') | (map[y / block_size * roomSize + x / block_size] == 'x');
+      ans |= (x < 0) || (x >= roomSize * block_size) || (y < 0) || (y >= roomSize * block_size);
     } 
   }
   return ans;
@@ -107,6 +117,8 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
   char * room_map = screen.Room()->Map();
   int move_dist = move_speed * 1;
 
+  // std::cout << coords.x << " " << coords.y << std::endl;
+
   /*preprocess room change*/
   bool is_change = false;
 
@@ -132,9 +144,10 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
     old_coords.x = coords.x;
     old_coords.y = coords.y;
     key = false;
-    return STATE::PLAYING;
+    return STATE::ROOM_CHANGE;
   }
 
+  int new_move;
 
   while (move_dist > 0) {
     Point new_coords{coords.x, coords.y};
@@ -143,17 +156,26 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
     {
       case MovementDir::UP:
         new_coords.y += move_dist;
+        direction = 2;
+        new_move = move % 2 + 1;
         break;
       case MovementDir::DOWN:
         new_coords.y -= move_dist;
+        direction = 0;
+        new_move = move % 2 + 1;
         break;
       case MovementDir::LEFT:
         new_coords.x -= move_dist;
+        direction = 1;
+        new_move = move % 2 + 1;
         break;
       case MovementDir::RIGHT:
         new_coords.x += move_dist;
+        direction = 3;
+        new_move = move % 2 + 1;
         break;
       default:
+        new_move = 0;
         break;
     }
 
@@ -170,6 +192,9 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
 
     move_dist -= 1;
   }
+
+  data = tiles[direction * 3 + new_move];
+  move = new_move;
 
   if (check_quit(coords, room_map)) {
     return STATE::WIN;
@@ -191,6 +216,14 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
   return STATE::PLAYING;
 }
 
+static Pixel blend(Pixel oldPixel, Pixel newPixel) {
+  if (!newPixel.r && !newPixel.g && !newPixel.b && !newPixel.a) {
+    // std::cout << "Im here" << std::endl;
+    return oldPixel;
+  }
+  return newPixel;
+}
+
 void Player::Draw(Image &screen)
 {
   if(Moved())
@@ -209,7 +242,10 @@ void Player::Draw(Image &screen)
   {
     for(int x = coords.x; x < coords.x + tileSize; ++x)
     {
-      screen.PutPixel(x, y, color);
+      Pixel tmp = data[(coords.y + tileSize - y) * tileSize + (x - coords.x)];
+      if (tmp.r > 50 || tmp.g  > 50 || tmp.b > 50) {
+        screen.PutPixel(x, y, tmp);
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ CMakeFiles/main.dir/glad.c.o: dependencies/include/GLAD/glad/glad.h
 
 CMakeFiles/main.dir/Image.cpp.o: Image.cpp
 CMakeFiles/main.dir/Image.cpp.o: Image.h
+CMakeFiles/main.dir/Image.cpp.o: Player.h
 CMakeFiles/main.dir/Image.cpp.o: stb_image.h
 CMakeFiles/main.dir/Image.cpp.o: stb_image_write.h
 

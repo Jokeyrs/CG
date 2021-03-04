@@ -4,7 +4,7 @@
 #include <string>
 
 constexpr int block_size = 32;
-constexpr int tileSize = 16;
+constexpr int tileSize = 32;
 constexpr int roomSize = 32;
 
 constexpr int mapWidth = 10;
@@ -49,6 +49,7 @@ struct Image
   void winData();
   void loseData();
   Pixel * floorData();
+  void blend(float alpha);
 
 
   Pixel GetPixel(int x, int y) { return data[width * y + x];}
@@ -67,6 +68,7 @@ private:
   struct Room * cur_room = nullptr;
   char * rooms_map = new char[2];
   struct Room * rooms = nullptr;
+  struct Room * prev_room = nullptr;
   int x_room = 0;
   int y_room = 0;
 };

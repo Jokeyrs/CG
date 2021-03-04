@@ -20,13 +20,13 @@ enum class MovementDir
 enum class STATE{
   PLAYING,
   WIN,
-  LOSE
+  LOSE, 
+  ROOM_CHANGE
 };
 
 struct Player
 {
-  explicit Player(Point pos = {.x = 10, .y = 10}) :
-                 coords(pos), old_coords(coords) {};
+  explicit Player(Point pos);
 
   bool Moved() const;
   STATE ProcessInput(MovementDir dir, Image &screen);
@@ -40,6 +40,10 @@ private:
   bool key = false;
   int move_speed = 1;
   bool changed_room = false;
+  Pixel * data = nullptr;
+  Pixel ** tiles = nullptr;
+  int direction = 0;
+  int move = 0;
 };
 
 #endif //MAIN_PLAYER_H
