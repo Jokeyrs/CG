@@ -50,12 +50,14 @@ struct Image
   void loseData();
   Pixel * floorData();
   void blend(float alpha);
+  void blend_prev_room(float alpha);
+  void blend_cur_room(float alpha);
 
 
   Pixel GetPixel(int x, int y) { return data[width * y + x];}
   void  PutPixel(int x, int y, const Pixel &pix) { data[width* y + x] = pix; }
   void  PutBackGround(int x, int y) { data[width* y + x] = cur_room->get_room()[width * y + x]; }
-
+  void  PutPixelLife(int x, int y, int i);
   ~Image();
 
 private:
@@ -69,6 +71,7 @@ private:
   char * rooms_map = new char[2];
   struct Room * rooms = nullptr;
   struct Room * prev_room = nullptr;
+  Pixel * life = nullptr;
   int x_room = 0;
   int y_room = 0;
 };

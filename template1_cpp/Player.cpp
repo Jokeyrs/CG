@@ -113,7 +113,7 @@ bool check_empty(Point &coords, char *map) {
   return ans;
 }
 
-STATE Player::ProcessInput(MovementDir dir, Image &screen) {
+STATE Player::ProcessInput(MovementDir dir, Image &screen, float dt) {
   char * room_map = screen.Room()->Map();
   int move_dist = move_speed * 1;
 
@@ -148,6 +148,7 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
   }
 
   int new_move;
+  int new_direction;
 
   while (move_dist > 0) {
     Point new_coords{coords.x, coords.y};
@@ -156,22 +157,22 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
     {
       case MovementDir::UP:
         new_coords.y += move_dist;
-        direction = 2;
+        new_direction = 2;
         new_move = move % 2 + 1;
         break;
       case MovementDir::DOWN:
         new_coords.y -= move_dist;
-        direction = 0;
+        new_direction = 0;
         new_move = move % 2 + 1;
         break;
       case MovementDir::LEFT:
         new_coords.x -= move_dist;
-        direction = 1;
+        new_direction = 1;
         new_move = move % 2 + 1;
         break;
       case MovementDir::RIGHT:
         new_coords.x += move_dist;
-        direction = 3;
+        new_direction = 3;
         new_move = move % 2 + 1;
         break;
       default:
@@ -193,15 +194,29 @@ STATE Player::ProcessInput(MovementDir dir, Image &screen) {
     move_dist -= 1;
   }
 
-  data = tiles[direction * 3 + new_move];
-  move = new_move;
+  if (dt - prev_move_time > 0.2 || direction != new_direction) {
+    data = tiles[new_direction * 3 + new_move];
+    move = new_move;
+    direction = new_direction;
+    prev_move_time = dt;
+  }
 
   if (check_quit(coords, room_map)) {
     return STATE::WIN;
   }
 
-  if (check_empty(coords, room_map)) {
-    return STATE::LOSE;
+  dying = check_empty(coords, room_map);
+  if (check_empty(coords, room_map) && (dt - prev_lost_life_time) > 1) {
+    lost_life = true;
+    lives--;
+    prev_lost_life_time = dt;
+    if (lives) {
+      return STATE::PLAYING;
+    } else {
+      return STATE::LOSE;
+    }
+  } else {
+    lost_life = false;
   }
 
   if (check_key(coords, screen)) {
@@ -245,6 +260,16 @@ void Player::Draw(Image &screen)
       Pixel tmp = data[(coords.y + tileSize - y) * tileSize + (x - coords.x)];
       if (tmp.r > 50 || tmp.g  > 50 || tmp.b > 50) {
         screen.PutPixel(x, y, tmp);
+      }
+    }
+  }
+  
+  if (lost_life) {
+    for (int i = 3 - lives - 1; i >= 0; --i) {
+      for(int y = roomSize * block_size - block_size; y < roomSize * block_size; ++y) {
+        for(int x = roomSize * block_size - (i + 1) * block_size; x < roomSize * block_size - i * block_size; ++x) {
+          screen.PutBackGround(x, y);
+        }
       }
     }
   }

@@ -53,6 +53,19 @@ Image::Image(const std::string &a_path) {
   height = roomSize * block_size;
   channels = sizeof(Pixel);
   size = width * height * channels;
+
+  int tmp_width;
+  int tmp_height;
+  int tmp_channels;
+  life = (Pixel*)stbi_load("../Tiles/Life.png", &tmp_width, &tmp_channels, &tmp_height, sizeof(Pixel));
+
+  for(int i = 0; i < 3; ++i) {
+    for(int y = 0; y < block_size; ++y) {
+      for(int x = 0; x < block_size; ++x) {
+        PutPixelLife(x, y, i);
+      }
+    }
+  }
 }
 
 Image::Image(int a_width, int a_height, int a_channels)
@@ -131,6 +144,32 @@ void Image::blend(float alpha) {
     data[i].b = cur_room_data[i].b * alpha + prev_room_data[i].b * (1 - alpha);
     data[i].a = cur_room_data[i].a * alpha + prev_room_data[i].a * (1 - alpha);
   }
+}
+
+void Image::blend_prev_room(float alpha) {
+  Pixel * prev_room_data = prev_room->get_room();
+
+  for (int i = 0; i < roomSize * roomSize * block_size * block_size; ++i) {
+    data[i].r = prev_room_data[i].r * (1 - alpha);
+    data[i].g = prev_room_data[i].g * (1 - alpha);
+    data[i].b = prev_room_data[i].b * (1 - alpha);
+    data[i].a = prev_room_data[i].a * (1 - alpha);
+  }
+}
+
+void Image::blend_cur_room(float alpha) {
+  Pixel * cur_room_data = cur_room->get_room();
+
+  for (int i = 0; i < roomSize * roomSize * block_size * block_size; ++i) {
+    data[i].r = cur_room_data[i].r * alpha;
+    data[i].g = cur_room_data[i].g * alpha;
+    data[i].b = cur_room_data[i].b * alpha;
+    data[i].a = cur_room_data[i].a * alpha;
+  }
+}
+
+void Image::PutPixelLife(int x, int y, int i) { 
+  data[width * (height - block_size + y) + width - block_size * (i + 1) + x] = life[block_size * y + x];
 }
 
 void Image::winData() {

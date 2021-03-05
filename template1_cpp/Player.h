@@ -29,9 +29,16 @@ struct Player
   explicit Player(Point pos);
 
   bool Moved() const;
-  STATE ProcessInput(MovementDir dir, Image &screen);
+  STATE ProcessInput(MovementDir dir, Image &screen, float dt);
   void Draw(Image &screen);
   void change_key() { key = !key; }
+  int num_lives()       { return lives; }
+  bool is_dying()       { return dying; }
+
+  int lives = 3;
+  bool lost_life = false;
+  float prev_lost_life_time = 0.0;
+  bool dying = 0.0;
 
 private:
   Point coords {.x = 10, .y = 10};
@@ -44,6 +51,7 @@ private:
   Pixel ** tiles = nullptr;
   int direction = 0;
   int move = 0;
+  float prev_move_time = 0.0;
 };
 
 #endif //MAIN_PLAYER_H

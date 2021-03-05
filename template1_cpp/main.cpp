@@ -20,6 +20,7 @@ struct InputState
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
+GLfloat currentFrame = 0.0f;
 
 
 void OnKeyboardPressed(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -47,14 +48,26 @@ void OnKeyboardPressed(GLFWwindow* window, int key, int scancode, int action, in
 STATE processPlayerMovement(Player &player, Image &screen)
 {
   if (Input.keys[GLFW_KEY_W])
-    return player.ProcessInput(MovementDir::UP, screen);
+    return player.ProcessInput(MovementDir::UP, screen, currentFrame);
   else if (Input.keys[GLFW_KEY_S])
-    return player.ProcessInput(MovementDir::DOWN, screen);
+    return player.ProcessInput(MovementDir::DOWN, screen, currentFrame);
   if (Input.keys[GLFW_KEY_A])
-    return player.ProcessInput(MovementDir::LEFT, screen);
+    return player.ProcessInput(MovementDir::LEFT, screen, currentFrame);
   else if (Input.keys[GLFW_KEY_D])
-    return player.ProcessInput(MovementDir::RIGHT, screen);
+    return player.ProcessInput(MovementDir::RIGHT, screen, currentFrame);
 
+  if (player.dying && (currentFrame - player.prev_lost_life_time) > 1) {
+    player.lost_life = true;
+    player.lives--;
+    player.prev_lost_life_time = currentFrame;
+    if (player.lives) {
+      return STATE::PLAYING;
+    } else {
+      return STATE::LOSE;
+    }
+  } else {
+    player.lost_life = false;
+  }
   return STATE::PLAYING;
 }
 
@@ -149,8 +162,7 @@ int main(int argc, char** argv)
 	
 	glfwMakeContextCurrent(window); 
 
-	glfwSetKeyCallback        (window, OnKeyboardPressed);  
-	glfwSetCursorPosCallback  (window, OnMouseMove); 
+	glfwSetKeyCallback        (window, OnKeyboardPressed); 
   glfwSetMouseButtonCallback(window, OnMouseButtonClicked);
 	glfwSetScrollCallback     (window, OnMouseScroll);
 
@@ -176,11 +188,11 @@ int main(int argc, char** argv)
   int count = 0;
 
 	while (!glfwWindowShouldClose(window) && run_loop) {
-    GLfloat currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
+    currentFrame = glfwGetTime();
+		deltaTime += currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-    if (count % 2) {
+    if (deltaTime < 0.003) {
       render(screenBuffer, window);
     } else {
       switch(game_state) {
@@ -203,21 +215,32 @@ int main(int argc, char** argv)
 
           game_state = processPlayerMovement(player, screenBuffer);
           if (game_state == STATE::ROOM_CHANGE) {
-            float alpha = 0.02;
-            for (int i = 0; i <= 50; ++i) {
-              screenBuffer.blend(alpha * i);
+            float alpha = 0.01;
+            for (int i = 0; i <= 100; ++i) {
+              screenBuffer.blend_prev_room(alpha * i);
               render(screenBuffer, window);
+            }
+            for (int i = 0; i <= 100; ++i) {
+              screenBuffer.blend_cur_room(alpha * i);
+              render(screenBuffer, window);
+            }
+            for(int i = 0; i < player.num_lives(); ++i) {
+              for(int y = 0; y < block_size; ++y) {
+                for(int x = 0; x < block_size; ++x) {
+                  screenBuffer.PutPixelLife(x, y, i);
+                }
+              }
             }
             game_state = STATE::PLAYING;
           }
 
-          
           player.Draw(screenBuffer);
           render(screenBuffer, window);
           break;
         default:
           break;
       }
+      deltaTime = 0.0;
     }
     count++;
 	}
